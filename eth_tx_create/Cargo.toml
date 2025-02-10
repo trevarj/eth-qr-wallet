@@ -1,0 +1,17 @@
+[package]
+name = "eth_tx_create"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alloy.workspace = true
+anyhow.workspace = true
+argh.workspace = true
+clap.workspace = true
+dirs.workspace = true
+image.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+toml.workspace = true
+qrcode.workspace = true

@@ -1,0 +1,21 @@
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = ["eth_tx_create", "eth_tx_sign_offline"]
+resolver = "2"
+
+[workspace.dependencies]
+alloy = "0.11.0"
+alloy-provider = "0.11.0"
+anyhow = "1"
+argh = "0.1.13"
+clap = { version = "4.5.28", features = ["derive", "env"] }
+dirs = "6.0.0"
+image = "0.25.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }
+toml = "0.8.20"
+qrcode = "0.14.1"
