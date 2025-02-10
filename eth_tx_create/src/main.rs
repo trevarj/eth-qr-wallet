@@ -3,7 +3,6 @@ use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use alloy::consensus::constants::ETH_TO_WEI;
-use alloy::consensus::TxEip1559;
 use alloy::eips::eip2718::EIP1559_TX_TYPE_ID;
 use alloy::hex::ToHexExt;
 use alloy::network::TransactionBuilder;
@@ -33,6 +32,9 @@ sol!(
 /// A simple ETH transaction builder
 #[derive(Parser)]
 struct Cli {
+    /// RPC node URL
+    #[arg(short, long)]
+    rpc: Option<String>,
     #[command(subcommand)]
     token: Token,
 }
@@ -86,6 +88,16 @@ impl Token {
             Token::Usdt { .. } => Some(USDT_MAINNET_ADDR),
         }
     }
+
+    fn rpc(&self) -> String {
+        match self {
+            Token::Eth { .. } | Token::Usdc { .. } | Token::Usdt { .. } => {
+                "https://rpc.ankr.com/eth"
+            }
+            Token::UsdcSepolia { .. } => "https://ethereum-sepolia-rpc.publicnode.com",
+        }
+        .into()
+    }
 }
 
 /// Command-line options for an EIP1559 transaction
@@ -134,10 +146,9 @@ struct AddressBook {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let Cli { token } = Cli::parse();
+    let Cli { rpc, token } = Cli::parse();
 
-    let provider =
-        ProviderBuilder::new().on_http(Url::parse("https://ethereum-sepolia-rpc.publicnode.com")?);
+    let provider = ProviderBuilder::new().on_http(Url::parse(&rpc.unwrap_or_else(|| token.rpc()))?);
 
     let Eip1559Opts {
         from,

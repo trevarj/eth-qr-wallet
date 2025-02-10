@@ -25,7 +25,6 @@ fn main() -> Result<()> {
     println!("Paste private key in hex:");
     let mut pk = String::new();
     stdin().read_line(&mut pk)?;
-    dbg!(&pk);
     let signer = pk.trim().parse::<PrivateKeySigner>()?;
 
     println!("Signing with address: {}", signer.address());
