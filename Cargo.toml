@@ -11,11 +11,16 @@ alloy = "0.11.0"
 alloy-provider = "0.11.0"
 anyhow = "1"
 argh = "0.1.13"
+bip32 = { version = "0.5.3", features = ["secp256k1"] }
 clap = { version = "4.5.28", features = ["derive", "env"] }
 dirs = "6.0.0"
+hex = "0.4.3"
 image = "0.25.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }
 toml = "0.8.20"
 qrcode = "0.14.1"
+
+ur = { git = "https://github.com/KeystoneHQ/ur-rs", tag = "0.3.3", default-features = false }
+ur-registry = { git = "https://github.com/KeystoneHQ/keystone-sdk-rust" }

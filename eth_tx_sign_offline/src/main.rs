@@ -7,8 +7,9 @@ use alloy::network::TxSignerSync;
 use alloy::signers::local::PrivateKeySigner;
 use anyhow::{Context, Result};
 use clap::Parser;
-use qrcode::render::unicode;
-use qrcode::QrCode;
+
+pub mod qr;
+pub mod ur;
 
 /// A simple offline ETH transaction signer
 #[derive(Parser)]
@@ -40,12 +41,7 @@ fn main() -> Result<()> {
     );
     let tx_hex = encoded_tx.encode_hex();
     println!("Raw RLP-encoded transaction: {tx_hex}");
-    let code = QrCode::new(tx_hex)?;
-    let image = code
-        .render::<unicode::Dense1x2>()
-        .dark_color(unicode::Dense1x2::Light)
-        .light_color(unicode::Dense1x2::Dark)
-        .build();
-    println!("{}", image);
+    let qr = qr::data_to_qr(tx_hex)?;
+    println!("{}", qr);
     Ok(())
 }
