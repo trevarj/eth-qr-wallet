@@ -7,8 +7,7 @@ members = ["eth_tx_create", "eth_tx_sign_offline"]
 resolver = "2"
 
 [workspace.dependencies]
-alloy = "0.11.0"
-alloy-provider = "0.11.0"
+alloy = { version = "0.11.0", features = ["rlp", "serde"] }
 anyhow = "1"
 argh = "0.1.13"
 bip32 = { version = "0.5.3", features = ["secp256k1"] }

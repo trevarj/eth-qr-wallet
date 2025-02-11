@@ -1561,8 +1561,11 @@ dependencies = [
  "anyhow",
  "bip32",
  "clap",
+ "dirs",
  "qrcode",
+ "serde",
  "serde_json",
+ "toml",
  "ur",
  "ur-registry",
 ]
