@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use bip32::{PublicKey, XPub};
 use ur_registry::crypto_coin_info::{CoinType, CryptoCoinInfo, Network};
 use ur_registry::crypto_hd_key::CryptoHDKey;
@@ -47,7 +47,8 @@ pub fn encoded_xpub(xpub: &XPub, master_fingerprint: [u8; 4]) -> Result<String> 
 }
 
 pub fn decode_sign_request(req: &str) -> Result<EthSignRequest> {
-    let (_kind, bytes) = ur::decode(&req.to_lowercase()).unwrap();
+    let (_kind, bytes) = ur::decode(&req.trim().to_lowercase())
+        .or_else(|e| bail!("unable to decode sign request: {e}"))?;
     Ok(EthSignRequest::try_from(bytes)?)
 }
 
