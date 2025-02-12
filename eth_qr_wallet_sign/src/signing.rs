@@ -41,7 +41,8 @@ mod tests {
         //     xpriv.public_key().to_bytes().encode_hex()
         // );
         let data= <Vec<u8>>::from_hex("02f283aa36a7808459682f00851e96c0a3bc82520894cc53351624cd19c4555d6ada86a919134b20746b87038d7ea4c6800080c0").unwrap();
-        let signature = sign_data(pk.to_owned(), &data).unwrap();
-        dbg!(signature.as_bytes().encode_hex());
+        let mut parsed = parse_sign_data(&data).unwrap();
+        let signature = sign_eip1559(pk.to_owned(), &mut parsed).unwrap();
+        dbg!(signature.encode_hex());
     }
 }

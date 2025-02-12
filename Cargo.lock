@@ -1537,6 +1537,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "eth_qr_wallet_sign"
+version = "0.1.0"
+dependencies = [
+ "alloy",
+ "anyhow",
+ "bip32",
+ "dirs",
+ "qrcode",
+ "serde",
+ "serde_json",
+ "toml",
+ "ur",
+ "ur-registry",
+]
+
+[[package]]
 name = "eth_tx_create"
 version = "0.1.0"
 dependencies = [
@@ -1551,23 +1567,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "toml",
-]
-
-[[package]]
-name = "eth_tx_sign_offline"
-version = "0.1.0"
-dependencies = [
- "alloy",
- "anyhow",
- "bip32",
- "clap",
- "dirs",
- "qrcode",
- "serde",
- "serde_json",
- "toml",
- "ur",
- "ur-registry",
 ]
 
 [[package]]

@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn can_encode_signature() {
         let sig = <Vec<u8>>::from_hex("e2a8b9fd25a803baf623c7d0102ddb8b92f47ec93fdcdaf0bdd43d2da4d821816ca0f148c43a25655b772eb9dc689bb10c0fcd9ddced780ab00a8384442f94fb1c").unwrap();
-        let string = encoded_signature(sig).unwrap();
+        let string = encoded_signature(None, &sig).unwrap();
         println!("{string}\n{}", crate::qr::data_to_qr(&string).unwrap());
     }
 }

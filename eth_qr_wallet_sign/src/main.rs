@@ -1,15 +1,10 @@
-use std::io::stdin;
 use std::process::{Command, Output, Stdio};
 
-use alloy::consensus::{SignableTransaction, TxEip1559, TxEnvelope};
-use alloy::eips::Encodable2718;
+use alloy::consensus::TxEip1559;
 use alloy::hex::{FromHex, ToHexExt};
-use alloy::network::TxSignerSync;
 use alloy::primitives::utils::{format_ether, format_units};
-use alloy::signers::local::PrivateKeySigner;
 use anyhow::{bail, Context, Result};
 use bip32::{ChildNumber, DerivationPath, Mnemonic, Seed, XPrv};
-use clap::Parser;
 use serde::Deserialize;
 use signing::{parse_sign_data, sign_eip1559};
 use ur::{decode_sign_request, encoded_signature};
@@ -25,40 +20,6 @@ struct Config {
     seed_cmd: String,
     /// A command to run that scans and decodes a QR
     qr_scan_cmd: String,
-}
-
-/// A simple offline ETH transaction signer
-#[derive(Parser)]
-struct Cli {
-    /// The EIP1559 json string as hex (created by eth_tx_create)
-    input: Option<String>,
-}
-
-fn from_eth_tx_create(input: String) -> Result<()> {
-    let tx_bytes = <Vec<u8>>::from_hex(input.trim()).context("converting tx json hex to bytes")?;
-    let mut tx: TxEip1559 = serde_json::from_slice(&tx_bytes)?;
-
-    println!("Paste private key in hex:");
-    let mut pk = String::new();
-    stdin().read_line(&mut pk)?;
-    let signer = pk.trim().parse::<PrivateKeySigner>()?;
-
-    println!("Signing with address: {}", signer.address());
-    println!("Signing tx: {}", serde_json::to_string_pretty(&tx)?);
-    let signature = signer.sign_transaction_sync(&mut tx)?;
-    let signed_tx = tx.into_signed(signature);
-    let tx_envelope = TxEnvelope::from(signed_tx);
-    let mut encoded_tx = vec![];
-    tx_envelope.encode_2718(&mut encoded_tx);
-    println!(
-        "Signed transaction: {}",
-        serde_json::to_string_pretty(&tx_envelope)?
-    );
-    let tx_hex = encoded_tx.encode_hex();
-    println!("Raw RLP-encoded transaction: {tx_hex}");
-    let qr = qr::data_to_qr(tx_hex)?;
-    println!("{}", qr);
-    Ok(())
 }
 
 fn parse_command(cmd: &str) -> Result<(&str, Vec<&str>)> {
@@ -106,12 +67,6 @@ fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    let cli = Cli::parse();
-    if let Some(input) = cli.input {
-        from_eth_tx_create(input)?;
-        return Ok(());
-    }
-
     let Some(config_path) = dirs::config_dir().map(|mut p| {
         p.push("eth_tools/config.toml");
         p

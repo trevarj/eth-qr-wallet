@@ -3,7 +3,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["eth_tx_create", "eth_tx_sign_offline"]
+members = ["eth_tx_create", "eth_qr_wallet_sign"]
 resolver = "2"
 
 [workspace.dependencies]

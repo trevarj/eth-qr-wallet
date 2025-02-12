@@ -1,5 +1,5 @@
 [package]
-name = "eth_tx_sign_offline"
+name = "eth_qr_wallet_sign"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,6 @@ edition = "2021"
 alloy.workspace = true
 anyhow.workspace = true
 bip32.workspace = true
-clap.workspace = true
 dirs.workspace = true
 serde.workspace = true
 serde_json.workspace = true
