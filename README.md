@@ -18,8 +18,8 @@ The signer that will be on the offline device.
 Utilizes libraries from Keystone wallet, i.e Uniform Resources (UR).
 
 #### Public Key Export
-1. The user will run a command that generates a QR code that can be imported as
-   a watch-only account in an online device wallet.
+1. The user will run `eth_qr_wallet_sign --export` which generates a QR code
+   that can be imported as a watch-only account in an online device wallet.
 
 #### Transaction Signing
 1. Run command to import mnemonic or seed (user configured).
