@@ -123,6 +123,12 @@ fn main() -> Result<()> {
     };
 
     let sign_req = decode_sign_request(&sign_req)?;
+    println!(
+        "Sign Request for address: {}",
+        sign_req
+            .get_address()
+            .map_or_else(|| String::from("N/A"), |v| v.encode_hex())
+    );
     let req_id = sign_req.get_request_id();
     let derivation_path = sign_req.get_derivation_path().get_components().iter().fold(
         DerivationPath::default(),
