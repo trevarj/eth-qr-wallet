@@ -30,6 +30,14 @@ Utilizes libraries from Keystone wallet, i.e Uniform Resources (UR).
 5. QR code with signature is displayed for capturing by the online device.
 6. Online device broadcasts the transaction.
 
+#### Config Example
+`~/.config/eth_tools/config.toml`
+
+```toml
+seed_cmd = "keepassxc-cli show -s -a Password /home/user/Passwords.kdbx mnemonic"
+qr_scan_cmd = "zbarcam -q --raw -1"
+```
+
 ### `eth_tx_create`
 
 A WIP, simple CLI ETH transaction creation.
