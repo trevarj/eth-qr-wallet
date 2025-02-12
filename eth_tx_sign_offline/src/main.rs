@@ -5,12 +5,13 @@ use alloy::consensus::{SignableTransaction, TxEip1559, TxEnvelope};
 use alloy::eips::Encodable2718;
 use alloy::hex::{FromHex, ToHexExt};
 use alloy::network::TxSignerSync;
+use alloy::primitives::utils::{format_ether, format_units};
 use alloy::signers::local::PrivateKeySigner;
 use anyhow::{bail, Context, Result};
 use bip32::{ChildNumber, DerivationPath, Mnemonic, Seed, XPrv};
 use clap::Parser;
 use serde::Deserialize;
-use signing::{parse_sign_data, sign_data, sign_eip1559};
+use signing::{parse_sign_data, sign_eip1559};
 use ur::{decode_sign_request, encoded_signature};
 
 pub mod qr;
@@ -72,6 +73,35 @@ fn parse_command_output(output: Output) -> Result<String> {
     } else {
         bail!("Seed cmd failed: {}", String::from_utf8(output.stderr)?);
     }
+}
+
+fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
+    let TxEip1559 {
+        chain_id,
+        nonce,
+        gas_limit,
+        max_fee_per_gas,
+        max_priority_fee_per_gas,
+        to,
+        value,
+        ..
+    } = tx;
+
+    println!("To address: {}", serde_json::to_string(to)?);
+    println!("Amount {} ETH", format_ether(*value));
+    println!("Gas Limit: {gas_limit}");
+    println!(
+        "Max Fee Per Gas: {} GWEI",
+        format_units(*max_fee_per_gas, "gwei")?
+    );
+    println!(
+        "Max Priority Fee Per Gas: {} GWEI",
+        format_units(*max_priority_fee_per_gas, "gwei")?
+    );
+    println!("Chain ID: {chain_id}");
+    println!("Nonce: {nonce}");
+
+    Ok(())
 }
 
 fn main() -> Result<()> {
@@ -145,6 +175,13 @@ fn main() -> Result<()> {
     let pk = xpriv.private_key().to_owned();
 
     let mut tx = parse_sign_data(&sign_req.get_sign_data())?;
+    println!(
+        "Raw transaction to sign:\n{}",
+        serde_json::to_string_pretty(&tx)?
+    );
+
+    print_human_readable_tx_info(&tx)?;
+
     let sig = sign_eip1559(pk, &mut tx)?;
     let sig_res = encoded_signature(req_id, &sig)?;
 
