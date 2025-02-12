@@ -86,7 +86,7 @@ fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
         value,
         ..
     } = tx;
-
+    println!();
     println!("To address: {}", serde_json::to_string(to)?);
     println!("Amount {} ETH", format_ether(*value));
     println!("Gas Limit: {gas_limit}");
@@ -100,6 +100,7 @@ fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
     );
     println!("Chain ID: {chain_id}");
     println!("Nonce: {nonce}");
+    println!();
 
     Ok(())
 }
