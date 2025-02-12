@@ -1,3 +1,4 @@
+use std::io::{stdin, stdout, Write};
 use std::process::{Command, Output, Stdio};
 
 use alloy::consensus::TxEip1559;
@@ -138,10 +139,19 @@ fn main() -> Result<()> {
 
     print_human_readable_tx_info(&tx)?;
 
-    let sig = sign_eip1559(pk, &mut tx)?;
-    let sig_res = encoded_signature(req_id, &sig)?;
+    print!("Sign this transaction? (y/N): ");
+    stdout().flush()?;
 
-    println!("{}", qr::data_to_qr(sig_res)?);
+    let mut answer = String::new();
+    stdin().read_line(&mut answer)?;
+    match answer.to_lowercase().trim() {
+        "y" | "yes" => {
+            let sig = sign_eip1559(pk, &mut tx)?;
+            let sig_res = encoded_signature(req_id, &sig)?;
+            println!("{}", qr::data_to_qr(sig_res)?);
+        }
+        _ => bail!("Signing aborted."),
+    }
 
     Ok(())
 }
