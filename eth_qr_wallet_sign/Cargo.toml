@@ -4,7 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-alloy.workspace = true
+alloy = { version = "0.11.1", default-features = false, features = [
+  "consensus",
+  "network",
+  "signers",
+  "signer-local",
+  "rlp",
+  "serde",
+] }
 anyhow.workspace = true
 bip32.workspace = true
 dirs.workspace = true
