@@ -2,15 +2,21 @@ use alloy::consensus::TxEip1559;
 use alloy::network::TxSignerSync;
 use alloy::rlp::Decodable;
 use alloy::signers::local::PrivateKeySigner;
-use alloy::signers::Signature;
 use anyhow::Result;
 
-pub fn sign_data(pk: impl Into<PrivateKeySigner>, tx: &[u8]) -> Result<Signature> {
+pub fn parse_sign_data(tx: &[u8]) -> Result<TxEip1559> {
+    Ok(TxEip1559::decode(&mut &tx[1..])?)
+}
+
+pub fn sign_eip1559(pk: impl Into<PrivateKeySigner>, tx: &mut TxEip1559) -> Result<[u8; 65]> {
     let signer: PrivateKeySigner = pk.into();
     println!("Signing with address: {}", signer.address());
-    let mut tx = TxEip1559::decode(&mut &tx[1..]).unwrap();
-    println!("Signing tx: {}", serde_json::to_string_pretty(&tx)?);
-    Ok(signer.sign_transaction_sync(&mut tx)?)
+    let s = signer.sign_transaction_sync(tx)?;
+    let mut sig = [0u8; 65];
+    sig[..32].copy_from_slice(&s.r().to_be_bytes::<32>());
+    sig[32..64].copy_from_slice(&s.s().to_be_bytes::<32>());
+    sig[64] = s.v() as u8;
+    Ok(sig)
 }
 
 #[cfg(test)]

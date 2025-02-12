@@ -10,7 +10,7 @@ use anyhow::{bail, Context, Result};
 use bip32::{ChildNumber, DerivationPath, Mnemonic, Seed, XPrv};
 use clap::Parser;
 use serde::Deserialize;
-use signing::sign_data;
+use signing::{parse_sign_data, sign_data, sign_eip1559};
 use ur::{decode_sign_request, encoded_signature};
 
 pub mod qr;
@@ -144,11 +144,9 @@ fn main() -> Result<()> {
     let xpriv = XPrv::derive_from_path(seed, &derivation_path)?;
     let pk = xpriv.private_key().to_owned();
 
-    let sig = sign_data(pk, &sign_req.get_sign_data())?
-        .as_bytes()
-        .to_vec();
-
-    let sig_res = encoded_signature(req_id, sig)?;
+    let mut tx = parse_sign_data(&sign_req.get_sign_data())?;
+    let sig = sign_eip1559(pk, &mut tx)?;
+    let sig_res = encoded_signature(req_id, &sig)?;
 
     println!("{}", qr::data_to_qr(sig_res)?);
 
