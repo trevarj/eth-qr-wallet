@@ -123,7 +123,7 @@ fn main() -> Result<()> {
     };
 
     let sign_req = decode_sign_request(&sign_req)?;
-
+    let req_id = sign_req.get_request_id();
     let derivation_path = sign_req.get_derivation_path().get_components().iter().fold(
         DerivationPath::default(),
         |mut acc, c| {
@@ -142,7 +142,7 @@ fn main() -> Result<()> {
         .as_bytes()
         .to_vec();
 
-    let sig_res = encoded_signature(sig)?;
+    let sig_res = encoded_signature(req_id, sig)?;
 
     println!("{}", qr::data_to_qr(sig_res)?);
 

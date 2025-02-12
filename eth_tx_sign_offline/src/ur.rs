@@ -52,13 +52,14 @@ pub fn decode_sign_request(req: &str) -> Result<EthSignRequest> {
     Ok(EthSignRequest::try_from(bytes)?)
 }
 
-pub fn encoded_signature(sig: Vec<u8>) -> Result<String> {
-    let eth_sig = EthSignature::new(None, sig, None);
+pub fn encoded_signature(req_id: Option<Vec<u8>>, sig: Vec<u8>) -> Result<String> {
+    let eth_sig = EthSignature::new(req_id, sig, Some("offline_wallet".into()));
     Ok(ur::encode(
         #[allow(deprecated)]
         &eth_sig.to_bytes().unwrap(),
         EthSignature::get_registry_type().get_type(),
-    ))
+    )
+    .to_uppercase())
 }
 
 #[cfg(test)]
