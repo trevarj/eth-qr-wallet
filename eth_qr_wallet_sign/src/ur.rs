@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use bip32::{PublicKey, XPub};
+use bip32::{Prefix, PublicKey, Seed, XPrv, XPub};
 use ur_registry::crypto_coin_info::{CoinType, CryptoCoinInfo, Network};
 use ur_registry::crypto_hd_key::CryptoHDKey;
 use ur_registry::crypto_key_path::{CryptoKeyPath, PathComponent};
@@ -7,7 +7,19 @@ use ur_registry::ethereum::eth_sign_request::EthSignRequest;
 use ur_registry::ethereum::eth_signature::EthSignature;
 use ur_registry::traits::{RegistryItem, To};
 
-pub fn encoded_xpub(xpub: &XPub, master_fingerprint: [u8; 4]) -> Result<String> {
+pub fn export_hd_key(seed: &Seed) -> Result<()> {
+    let m_xpriv = XPrv::new(seed).unwrap();
+    let m_xpub = m_xpriv.public_key();
+    println!("master xpub: {}", m_xpub.to_string(Prefix::XPUB));
+    let master_fingerprint = m_xpriv.public_key().fingerprint();
+    let xpriv = XPrv::derive_from_path(seed, &("m/44'/60'/0'".parse().unwrap())).unwrap();
+    let xpub = xpriv.public_key();
+    let ur = encoded_xpub(&xpub, master_fingerprint)?;
+    println!("{}", crate::qr::data_to_qr(&ur).unwrap());
+    Ok(())
+}
+
+fn encoded_xpub(xpub: &XPub, master_fingerprint: [u8; 4]) -> Result<String> {
     let pubkey = xpub.public_key().to_bytes();
     let chain_code = xpub.attrs().chain_code;
     let hd_key = CryptoHDKey::new_extended_key(
@@ -65,7 +77,7 @@ pub fn encoded_signature(req_id: Option<Vec<u8>>, sig: &[u8]) -> Result<String> 
 #[cfg(test)]
 mod tests {
     use alloy::hex::{FromHex, ToHexExt};
-    use bip32::{Mnemonic, Prefix, XPrv};
+    use bip32::Mnemonic;
 
     use super::*;
 
@@ -79,15 +91,7 @@ mod tests {
         )
         .unwrap()
         .to_seed("");
-        let m_xpriv = XPrv::new(&seed).unwrap();
-        let m_xpub = m_xpriv.public_key();
-        println!("master xpub: {}", m_xpub.to_string(Prefix::XPUB));
-        let master_fingerprint = m_xpriv.public_key().fingerprint();
-        let xpriv = XPrv::derive_from_path(seed, &("m/44'/60'/0'".parse().unwrap())).unwrap();
-        let xpub = xpriv.public_key();
-        println!("x pubkey: {}", xpub.to_string(Prefix::XPUB));
-        let string = encoded_xpub(&xpub, master_fingerprint).unwrap();
-        println!("{string}\n{}", crate::qr::data_to_qr(&string).unwrap());
+        let string = export_hd_key(&seed).unwrap();
     }
 
     #[test]

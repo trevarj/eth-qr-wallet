@@ -8,7 +8,7 @@ use anyhow::{bail, Context, Result};
 use bip32::{ChildNumber, DerivationPath, Mnemonic, Seed, XPrv};
 use serde::Deserialize;
 use signing::{parse_sign_data, sign_eip1559};
-use ur::{decode_sign_request, encoded_signature};
+use ur::{decode_sign_request, encoded_signature, export_hd_key};
 
 pub mod qr;
 pub mod signing;
@@ -35,6 +35,30 @@ fn parse_command_output(output: Output) -> Result<String> {
     } else {
         bail!("Seed cmd failed: {}", String::from_utf8(output.stderr)?);
     }
+}
+
+fn import_seed(seed_cmd: &str) -> Result<Seed> {
+    let (cmd, args) = parse_command(seed_cmd)?;
+    let child = Command::new(cmd)
+        .args(args)
+        .stdout(Stdio::piped())
+        .spawn()?;
+    let output = child.wait_with_output()?;
+
+    let parsed = parse_command_output(output)?;
+    let mnemonic_or_seed: Vec<&str> = parsed.split_whitespace().collect();
+    println!("Parsing mnemonic or seed...");
+    let seed = match mnemonic_or_seed.len() {
+        0 => bail!("Empty string parsed from seed cmd"),
+        1 => Seed::new(
+            <Vec<u8>>::from_hex(mnemonic_or_seed.first().unwrap())
+                .context("Invalid hex for seed")?
+                .try_into()
+                .or_else(|_| bail!("Seed length incorrect"))?,
+        ),
+        _ => Mnemonic::new(mnemonic_or_seed.join(" "), Default::default())?.to_seed(""),
+    };
+    Ok(seed)
 }
 
 fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
@@ -68,6 +92,8 @@ fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+
     let Some(config_path) = dirs::config_dir().map(|mut p| {
         p.push("eth_tools/config.toml");
         p
@@ -80,6 +106,13 @@ fn main() -> Result<()> {
     }
     let config: Config = toml::from_str(&std::fs::read_to_string(config_path).unwrap_or_default())?;
 
+    let seed = import_seed(&config.seed_cmd)?;
+
+    if Some("--export") == args.get(1).map(AsRef::as_ref) {
+        export_hd_key(&seed)?;
+        return Ok(());
+    }
+
     let (cmd, args) = parse_command(&config.qr_scan_cmd)?;
     let child = Command::new(cmd)
         .args(args)
@@ -87,27 +120,6 @@ fn main() -> Result<()> {
         .spawn()?;
     let output = child.wait_with_output()?;
     let sign_req = parse_command_output(output)?;
-
-    let (cmd, args) = parse_command(&config.seed_cmd)?;
-    let child = Command::new(cmd)
-        .args(args)
-        .stdout(Stdio::piped())
-        .spawn()?;
-    let output = child.wait_with_output()?;
-
-    let parsed = parse_command_output(output)?;
-    let mnemonic_or_seed: Vec<&str> = parsed.split_whitespace().collect();
-    println!("Parsing mnemonic or seed...");
-    let seed = match mnemonic_or_seed.len() {
-        0 => bail!("Empty string parsed from seed cmd"),
-        1 => Seed::new(
-            <Vec<u8>>::from_hex(mnemonic_or_seed.first().unwrap())
-                .context("Invalid hex for seed")?
-                .try_into()
-                .or_else(|_| bail!("Seed length incorrect"))?,
-        ),
-        _ => Mnemonic::new(mnemonic_or_seed.join(" "), Default::default())?.to_seed(""),
-    };
 
     let sign_req = decode_sign_request(&sign_req)?;
     println!(
