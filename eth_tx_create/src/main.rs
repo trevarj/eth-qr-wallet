@@ -26,7 +26,7 @@ sol!(
     #[allow(missing_docs)]
     #[sol(rpc)]
     Erc20,
-    "abi/erc20.json"
+    "../abi/erc20.json"
 );
 
 /// A simple ETH transaction builder
@@ -248,4 +248,13 @@ async fn main() -> Result<()> {
     println!("Open {img_path} for QR code");
 
     Ok(())
+}
+
+#[test]
+fn decode_input() {
+    use alloy::hex::FromHex;
+    use alloy::sol_types::SolCall;
+    let bytes = <Vec<u8>>::from_hex("0xa9059cbb000000000000000000000000cc53351624cd19c4555d6ada86a919134b20746b0000000000000000000000000000000000000000000000000000000002faf080").unwrap();
+    let input = Erc20::transferCall::abi_decode(&bytes, false).unwrap();
+    dbg!(input.to, input.value);
 }

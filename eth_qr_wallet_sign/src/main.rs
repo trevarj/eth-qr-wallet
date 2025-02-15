@@ -4,15 +4,26 @@ use std::process::{Command, Output, Stdio};
 use alloy::consensus::TxEip1559;
 use alloy::hex::{FromHex, ToHexExt};
 use alloy::primitives::utils::{format_ether, format_units};
+use alloy::sol;
+use alloy::sol_types::SolCall;
 use anyhow::{bail, Context, Result};
 use bip32::{ChildNumber, DerivationPath, Mnemonic, Seed, XPrv};
+use erc20::Erc20Token;
 use serde::Deserialize;
 use signing::{parse_sign_data, sign_eip1559};
 use ur::{decode_sign_request, encoded_signature, export_hd_key};
 
+pub mod erc20;
 pub mod qr;
 pub mod signing;
 pub mod ur;
+
+sol!(
+    #[allow(missing_docs)]
+    #[sol(rpc)]
+    Erc20,
+    "../abi/erc20.json"
+);
 
 #[derive(Deserialize, Debug, Clone)]
 struct Config {
@@ -33,7 +44,11 @@ fn parse_command_output(output: Output) -> Result<String> {
     if output.status.success() {
         Ok(String::from_utf8(output.stdout)?)
     } else {
-        bail!("Seed cmd failed: {}", String::from_utf8(output.stderr)?);
+        bail!(
+            "Seed cmd failed: {} {}",
+            output.status,
+            String::from_utf8(output.stderr)?
+        );
     }
 }
 
@@ -70,11 +85,26 @@ fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
         max_priority_fee_per_gas,
         to,
         value,
+        input,
         ..
     } = tx;
-    println!();
-    println!("To address: {}", serde_json::to_string(to)?);
-    println!("Amount {} ETH", format_ether(*value));
+    if let Ok(erc_transfer) = Erc20::transferCall::abi_decode(input, false) {
+        println!("To address: {}", erc_transfer.to);
+        let contract_addr = to.to().map(|a| a.to_string()).unwrap().to_lowercase();
+        if let Some(token) = Erc20Token::from_addr(&contract_addr) {
+            println!(
+                "Amount {} {}",
+                format_units(erc_transfer.value, token.decimals)?,
+                token.symbol
+            );
+        } else {
+            println!("Amount {} ERC20 token", erc_transfer.value);
+        }
+    } else {
+        println!("To address: {}", serde_json::to_string(to)?.to_lowercase());
+        println!("Amount {} ETH", format_ether(*value));
+    }
+
     println!("Gas Limit: {gas_limit}");
     println!(
         "Max Fee Per Gas: {} GWEI",
@@ -122,12 +152,6 @@ fn main() -> Result<()> {
     let sign_req = parse_command_output(output)?;
 
     let sign_req = decode_sign_request(&sign_req)?;
-    println!(
-        "Sign Request for address: {}",
-        sign_req
-            .get_address()
-            .map_or_else(|| String::from("N/A"), |v| v.encode_hex())
-    );
     let req_id = sign_req.get_request_id();
     let derivation_path = sign_req.get_derivation_path().get_components().iter().fold(
         DerivationPath::default(),
@@ -145,10 +169,16 @@ fn main() -> Result<()> {
 
     let mut tx = parse_sign_data(&sign_req.get_sign_data())?;
     println!(
-        "Raw transaction to sign:\n{}",
+        "Raw transaction to sign:\n{}\n",
         serde_json::to_string_pretty(&tx)?
     );
 
+    println!(
+        "From address: 0x{}",
+        sign_req
+            .get_address()
+            .map_or_else(|| String::from("N/A"), |v| v.encode_hex().to_lowercase())
+    );
     print_human_readable_tx_info(&tx)?;
 
     print!("Sign this transaction? (y/N): ");
@@ -162,7 +192,7 @@ fn main() -> Result<()> {
             let sig_res = encoded_signature(req_id, &sig)?;
             println!("{}", qr::data_to_qr(sig_res)?);
         }
-        _ => bail!("Signing aborted."),
+        _ => println!("Signing aborted."),
     }
 
     Ok(())
