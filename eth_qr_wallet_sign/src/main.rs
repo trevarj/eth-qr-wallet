@@ -89,7 +89,7 @@ fn print_human_readable_tx_info(tx: &TxEip1559) -> Result<()> {
         ..
     } = tx;
     if let Ok(erc_transfer) = Erc20::transferCall::abi_decode(input, false) {
-        println!("To address: {}", erc_transfer.to);
+        println!("To address: {}", erc_transfer.to.to_string().to_lowercase());
         let contract_addr = to.to().map(|a| a.to_string()).unwrap().to_lowercase();
         if let Some(token) = Erc20Token::from_addr(&contract_addr) {
             println!(
