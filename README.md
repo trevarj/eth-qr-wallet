@@ -1,4 +1,4 @@
-# Ethereum Cold Wallet Tools
+# Ethereum QR-based Cold Wallet
 
 ## Goals
 Create a cold wallet system for Ethereum that can work using QR codes, similar
@@ -11,14 +11,14 @@ broadcast the transaction to the network.
 
 ## Tools
 
-### `eth_qr_wallet_sign`
+### `eth-qr-wallet`
 
 The signer that will be on the offline device.
 
 Utilizes libraries from Keystone wallet, i.e Uniform Resources (UR).
 
 #### Public Key Export
-1. The user will run `eth_qr_wallet_sign --export` which generates a QR code
+1. The user will run `eth-qr-wallet --export` which generates a QR code
    that can be imported as a watch-only account in an online device wallet.
 
 #### Transaction Signing
@@ -31,7 +31,7 @@ Utilizes libraries from Keystone wallet, i.e Uniform Resources (UR).
 6. Online device broadcasts the transaction.
 
 #### Config Example
-`~/.config/eth_tools/config.toml`
+`~/.config/eth-qr-wallet/config.toml`
 
 ```toml
 seed_cmd = "keepassxc-cli show -s -a Password /home/user/Passwords.kdbx mnemonic"
@@ -44,6 +44,5 @@ A WIP, simple CLI ETH transaction creation.
 
 
 ## TODO
-  * [ ] ERC20 transaction input parsing
   * [ ] Investigate why Metamask does not allow for review upon QR scan before
         broadcasting

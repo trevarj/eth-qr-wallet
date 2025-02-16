@@ -1,5 +1,5 @@
 [package]
-name = "eth_qr_wallet_sign"
+name = "eth-qr-wallet"
 version = "0.1.0"
 edition = "2021"
 
